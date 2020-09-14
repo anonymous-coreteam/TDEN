@@ -1,0 +1,103 @@
+LOGGER_NAME: 'log'
+SEED: 1546884941.160048
+CONFIG_FILE: 'config/pretrain/bert_base_6layer_6conect.json'
+
+############################ TRAIN ############################
+TRAIN:
+  BATCH_SIZE: 4
+  BERT_MODEL: 'bert-base-uncased'
+  FROM_PRETRAINED: 'bert-base-uncased'
+  DO_LOWER_CASE: True
+
+############################ DATA_LOADER ############################
+DATA_LOADER:
+  PRETRAIN_DATAROOT: 'ConceptualCaptions'
+  PRETRAIN_ANNO: 'Train_GCC-training.tsv'
+  PRETRAIN_FEAT_FOLDER: 'feature_train'
+  PRETRAIN_MAX_SEQ_LEN: 36
+  PRETRAIN_MAX_REGION_NUM: 51
+  NUM_WORKERS: 6
+  
+############################ MODEL ############################
+MODEL:
+  BERT_ENCODE: 'TDEN'
+  USE_DECODER: True
+  USE_CROSSER: True
+
+############################ SOLVER ############################ 
+SOLVER:
+  TYPE: 'BERTADAM'
+  LEARNING_RATE: 0.0001
+  WEIGHT_DECAY: 0.01
+  BERT_LR_FACTOR: 0.03
+  START_EPOCH: 0
+  NUM_TRAIN_EPOCHS: 10
+  WARMUP_PROPORTION: 0.1
+  DISPLAY: 20
+  TEST_INTERVAL: 1
+  SNAPSHOT_ITERS: 1
+  GRAD_CLIP_TYPE: 'Norm'
+  CLIP_GRAD: -1.0
+
+  ########## SGD ##########
+  SGD:
+    MOMENTUM: 0.9
+  ########## ADAM ##########
+  ADAM:
+    BETAS: [0.9, 0.999]
+    EPS: 1.0e-8
+  ########## LR_POLICY ##########
+  LR_POLICY:
+    TYPE: 'Fix'              # 'Fix', 'Step', 'MultiStep', 'Poly', Noam'
+    GAMMA: 0.8
+    STEP_SIZE: 3
+    STEPS: [10, 20]
+    SETP_TYPE: 'Epoch'        # 'Epoch', 'Iter'
+    WARMUP: 20000             #  For Noam only
+    FACTOR: 1.0               #  For Noam only
+    MODEL_SIZE: 768           #  For Noam only
+    BERTADAM_SCHEDULE: 'warmup_linear' # warmup_constant  warmup_linear
+
+############################ TASK ############################
+TASK:
+  SEL: [3]
+  NAME: ['VQA',
+         'VCR_Q-A', 
+         'VCR_QA-R', 
+         'RetrievalFlickr30k', 
+         'Caption']
+  PROCESS: ['normal',
+            'expand',
+            'expand',
+            'retrieval',
+            'expand']
+  DATAROOT: ['dataset/VQA',
+             'dataset/VCR',
+             'dataset/VCR',
+             'dataset/flickr30k',
+             'dataset/mscoco_pretrain']
+  FEAT_FOLDER: ['dataset/mscoco_pretrain/features_bottom_up_10_100',
+                'dataset/VCR/features_bottom_up_10_100',
+                'dataset/VCR/features_bottom_up_10_100',
+                'dataset/flickr30k/features_bottom_up_10_100',
+                'dataset/mscoco_pretrain/features_bottom_up_10_100']
+  GT_FEAT_FOLDER: ['ignore',
+                   'dataset/VCR/gt_features_bottom_up_10_100',
+                   'dataset/VCR/gt_features_bottom_up_10_100',
+                   'ignore',
+                   'ignore']
+  TRAIN_ANNO: ['ignore',
+               'dataset/VCR/train.jsonl',
+               'dataset/VCR/train.jsonl',
+               'dataset/flickr30k/all_data_final_train_2014.jsonline',
+               'ignore']
+  VAL_ANNO: ['ignore',
+             'dataset/VCR/val.jsonl',
+             'dataset/VCR/val.jsonl',
+             'dataset/flickr30k/all_data_final_val_set0_2014.jsonline',
+             'ignore']
+  MAX_SEQ_LEN: [23, 60, 80, 30, 20]
+  MAX_REGION_NUM: [101, 101, 101, 101, 101]
+  EVAL_BATCH_SIZE: [256, 16, 16, 20, 64]
+  TRAIN_SPLIT: ['trainval', 'train', 'train', 'train', 'train']
+  VAL_SPLIT: ['minval', 'val', 'val', 'val', 'val']
